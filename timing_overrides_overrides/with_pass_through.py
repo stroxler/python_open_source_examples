@@ -1,4 +1,5 @@
 def overrides(f):
+    setattr(f, "__override__", True)
     return f
 
 

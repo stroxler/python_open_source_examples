@@ -45,8 +45,16 @@ class Below(Base):
         pass
 
 
+print("--- @override below special decorators ---")
 print(f"Below.normal_method: {getattr(Below.normal_method, '__override__')}")
-print(f"Below.prop: {getattr(Below.static_method, '__override__')}")
+try:
+    print(f"Below.prop: {getattr(Below.prop, '__override__')}")
+except AttributeError as e:
+    print(f"Below.prop: {e}")
+try:
+    print(f"Below.prop.fget: {getattr(Below.prop.fget, '__override__')}")
+except AttributeError as e:
+    print(f"Below.prop: {e}")
 print(f"Below().normal_method: {getattr(Below().normal_method, '__override__')}")
 print(f"Below.class_method: {getattr(Below.class_method, '__override__')}")
 print(f"Below.static_method: {getattr(Below.static_method, '__override__')}")
@@ -80,7 +88,7 @@ class Above(Base):
 
 
 
-
+print("--- @override above special decorators ---")
 print(f"Above.normal_method: {getattr(Above.normal_method, '__override__')}")
 print(f"Above().normal_method: {getattr(Above().normal_method, '__override__')}")
 if prop_message is not None:
@@ -89,13 +97,13 @@ else:
     # this code doesn't wind up being run
     try:
         print(f"Above.prop: {getattr(Above.prop, '__override__')}")
-    except AttributeError:
-        print("Above.prop has no __override__ attribute")
+    except AttributeError as e:
+        print(f"Above.prop: {e}")
 try:
     print(f"Above.class_method: {getattr(Above.class_method, '__override__')}")
-except AttributeError:
-    print("Above.class_method has no __override__ attribute")
+except AttributeError as e:
+    print(f"Above.class_method: {e}")
 try:
     print(f"Above.static_method: {getattr(Above.static_method, '__override__')}")
-except AttributeError:
-    print("Above.static_method has no __override__ attribute")
+except AttributeError as e:
+    print(f"Above.static_method: {e}")

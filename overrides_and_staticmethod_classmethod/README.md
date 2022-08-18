@@ -50,15 +50,30 @@ What actually happens here is that
     by `__get__`. So normal code asking whether the `__override__`
     flag is set will see that it is not!
     
-Other descriptors like `@property` and `@classmethod` will behave in
-a simlilar way (although in the case of `@property` even trying to
-set `__override__` on the descriptor produces a runtime error, I'm guessing
-this is because property descriptors are C objects with fixed slots).
+The `@classmethod` decorator behaves similarly.
+
+The `@property` decorator is a bit more involved, in both cases:
+- trying to put the `@override` decorator above the `@property`
+  decorator will *immediately* throw a runtime error. I think this
+  is because the descriptor that it produces has a low-level
+  implementation with fixed slots, so the setattr call fails.
+- trying to put the `@override` decorator above the `@property`
+  decorator is okay at runtime, but it's still not possible to
+  trivially introspect.
+  - The underlying problem is that the property descriptor isn't implemented in
+    terms of just a `__get__`, it actually has separate hooks for get and set.
+    - This makes sense: at runtime it would be entirely possible for only one
+      of the getter or setter to be overridden, so there needs to be a way to
+      ask about each one separately
+  - You *can* still introspect at runtime, you simply have to look up
+    the `fget` and `fset` fields on the property when doing introspection.
 
 
-The takeaway is that these "special" decorators always need to come
-*above* the @override decorator in order to get expected runtime
-behavior.
+The takeaways are that:
+- in all cases, the special decorators need to be evaluated last
+  (so `@override` should go *below* them)
+- in the case of `@property` any runtime use of `__override__` must
+  moreover be sure to distinguish `fget` vs `fset`.
 
 # Demo of this behavior
 
@@ -66,17 +81,19 @@ In `demo.py` I test it out on all three of the standard, special descriptor
 decorators:
 ```
 > python demo.py
-
+--- @override below special decorators ---
 Below.normal_method: True
-Below.prop: True
+Below.prop: 'property' object has no attribute '__override__'
+Below.prop.fget: True
 Below().normal_method: True
 Below.class_method: True
 Below.static_method: True
-
+--- @override above special decorators ---
 Above.normal_method: True
 Above().normal_method: True
 Above.prop: Could not even set __override__ on property descriptor!
-Above.class_method has no __override__ attribute
-Above.static_method has no __override__ attribute
+Above.class_method: 'function' object has no attribute '__override__'
+Above.static_method: 'function' object has no attribute '__override__'
 ```
+
 
